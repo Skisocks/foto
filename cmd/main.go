@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"foto/cmd/app"
+	"github.com/skisocks/foto/cmd/app"
 	"os"
 )
 

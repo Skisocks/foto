@@ -1,4 +1,4 @@
-module foto
+module github.com/skisocks/foto
 
 go 1.18
 

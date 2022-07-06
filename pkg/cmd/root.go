@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"foto/pkg/rootcmd"
 	log "github.com/sirupsen/logrus"
+	"github.com/skisocks/foto/pkg/rootcmd"
 	"github.com/spf13/cobra"
 )
 

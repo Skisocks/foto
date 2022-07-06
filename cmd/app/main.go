@@ -1,6 +1,6 @@
 package app
 
-import "foto/pkg/cmd"
+import "github.com/skisocks/foto/pkg/cmd"
 
 // Run runs the command, if args are not nil they will be set on the command
 func Run(args []string) error {
