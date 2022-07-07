@@ -1,7 +1,7 @@
 NAME := foto
 BINARY_NAME := foto
 BUILD_TARGET = build
-ORG := spring-financial-group
+ORG := skisocks
 ORG_REPO := $(ORG)/$(NAME)
 ROOT_PACKAGE := github.com/$(ORG_REPO)
 MAIN_SRC_FILE=cmd/main.go
