@@ -9,6 +9,14 @@ import (
 	"path/filepath"
 )
 
+func IsDir(path string) (bool, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+	return stat.IsDir(), nil
+}
+
 func IsEmpty(dir string) (bool, error) {
 	paths, err := GetPaths(dir)
 	if err != nil {

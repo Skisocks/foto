@@ -3,6 +3,7 @@ package cmd
 import (
 	log "github.com/sirupsen/logrus"
 	_import "github.com/skisocks/foto/pkg/cmd/import"
+	"github.com/skisocks/foto/pkg/cmd/upload"
 	"github.com/skisocks/foto/pkg/cmd/version"
 	"github.com/skisocks/foto/pkg/helpers/command"
 	"github.com/skisocks/foto/pkg/rootcmd"
@@ -22,6 +23,7 @@ func Main() *cobra.Command {
 		},
 	}
 	cmd.AddCommand(_import.NewCmdImport())
+	cmd.AddCommand(upload.NewCmdUpload())
 	cmd.AddCommand(command.SplitCommand(version.NewCmdVersion()))
 	return cmd
 }
