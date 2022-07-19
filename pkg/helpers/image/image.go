@@ -1,16 +1,17 @@
 package image
 
 import (
-	"github.com/rwcarlsen/goexif/exif"
 	"github.com/skisocks/foto/pkg/helpers/files"
+	"github.com/xiam/exif"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type Image struct {
-	Data     *os.File
-	MetaData *exif.Exif
+	File *os.File
+	Info *exif.Data
 }
 
 func Read(path string) (*Image, error) {
@@ -19,8 +20,9 @@ func Read(path string) (*Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer img.Data.Close()
-	img.MetaData, err = exif.Decode(img.Data)
+	defer img.File.Close()
+
+	img.Info, err = exif.Read(path)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +30,6 @@ func Read(path string) (*Image, error) {
 }
 
 func (i *Image) Move(dst string) error {
-	dst = filepath.Join(dst, i.GetName())
 	err := files.Move(i.GetPath(), dst)
 	if err != nil {
 		return err
@@ -37,8 +38,7 @@ func (i *Image) Move(dst string) error {
 }
 
 func (i *Image) Copy(dst string) error {
-	dst = filepath.Join(dst, i.GetName())
-	err := files.Copy(i.Data.Name(), dst)
+	err := files.Copy(i.File.Name(), dst)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (i *Image) Copy(dst string) error {
 }
 
 func (i *Image) GetPath() string {
-	return i.Data.Name()
+	return i.File.Name()
 }
 
 func (i *Image) GetName() string {
@@ -58,7 +58,11 @@ func (i *Image) GetExt() string {
 	return strings.ToLower("." + split[len(split)-1])
 }
 
+func (i *Image) GetDateTime() (time.Time, error) {
+	return time.Parse("2006:01:02 15:04:05", i.Info.Tags["Date and Time"])
+}
+
 func (i *Image) updateData(path string) (err error) {
-	i.Data, err = os.Open(path)
+	i.File, err = os.Open(path)
 	return err
 }

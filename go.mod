@@ -8,10 +8,10 @@ require (
 	github.com/golang/glog v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/russross/blackfriday v1.6.0
-	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.5.0
+	github.com/xiam/exif v0.0.0-20160817012543-33e82e3db72f
 	gopkg.in/masci/flickr.v2 v2.0.0-20161216033441-3cc496dc15cd
 )
 

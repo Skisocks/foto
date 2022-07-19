@@ -7,7 +7,17 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+func GetExtension(name string) string {
+	split := strings.Split(name, ".")
+	return strings.ToLower("." + split[len(split)-1])
+}
+
+func NewPtr[T any](in T) *T {
+	return &in
+}
 
 func IsDir(path string) (bool, error) {
 	stat, err := os.Stat(path)
@@ -26,6 +36,10 @@ func IsEmpty(dir string) (bool, error) {
 }
 
 func Move(src, dst string) error {
+	err := os.MkdirAll(filepath.Dir(src), 0775)
+	if err != nil {
+		return err
+	}
 	return os.Rename(src, dst)
 }
 
@@ -35,6 +49,11 @@ func Copy(src, dst string) error {
 		return err
 	}
 	defer in.Close()
+
+	err = os.MkdirAll(filepath.Dir(dst), 0775)
+	if err != nil {
+		return err
+	}
 
 	out, err := os.Create(dst)
 	if err != nil {

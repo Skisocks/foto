@@ -11,6 +11,7 @@ import (
 	"github.com/skisocks/foto/pkg/rootcmd"
 	"github.com/spf13/cobra"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -19,9 +20,10 @@ type PhotoOptions struct {
 	Options
 	options.BaseOptions
 
-	Exclude   []string
-	Copy      bool
-	sourceDir string
+	Exclude       []string
+	Copy          bool
+	DirFormat     string
+	AddDateToName bool
 }
 
 var (
@@ -55,6 +57,8 @@ func NewCmdPhoto() *cobra.Command {
 	}
 	cmd.Flags().BoolVarP(&photoOptions.Copy, "copy", "c", true, "this copies the photos instead of moving them (default = true)")
 	cmd.Flags().StringArrayVarP(&photoOptions.Exclude, "exclude-types", "e", nil, "a list of file extensions to ignore (format as .jpg)")
+	cmd.Flags().StringVarP(&photoOptions.DirFormat, "dir-format", "d", "", "dir formatting using time.Format")
+	cmd.Flags().BoolVarP(&photoOptions.AddDateToName, "add-date-to-name", "n", false, "Adds the date that the photo was taken to the name")
 	return cmd
 }
 
@@ -64,15 +68,18 @@ func (o *PhotoOptions) Run(args []string) error {
 	if err != nil {
 		return err
 	}
-	src, dst, err := validateArgs(args)
+	source, destination, err := validateArgs(args)
 	if err != nil {
 		return err
 	}
 
-	paths, err := files.GetPaths(src)
+	paths, err := files.GetPaths(source)
 	if err != nil {
 		return err
 	}
+
+	// Remove any excluded file types
+	paths = o.filterPaths(paths)
 
 	act := "Moving"
 	if o.Copy {
@@ -80,30 +87,63 @@ func (o *PhotoOptions) Run(args []string) error {
 	}
 
 	bar := progressbar.Default(int64(len(paths)), fmt.Sprintf("%s images", act))
+	errs := make(map[string]error)
 	for _, path := range paths {
+		bar.Add(1)
+		dst := destination
+
 		img, err := image.Read(path)
 		if err != nil {
-			return err
-		}
-
-		if o.Exclude != nil && o.isExtensionExcluded(img.GetExt()) {
+			errs[path] = err
 			continue
 		}
 
+		if o.Exclude != nil && o.isExtensionExcluded(files.GetExtension(path)) {
+			continue
+		}
+
+		if o.DirFormat != "" {
+			takenTime, err := img.GetDateTime()
+			if err != nil {
+				errs[path] = err
+				continue
+			}
+			dst = filepath.Join(dst, takenTime.Format(o.DirFormat))
+		}
+
+		imageName := img.GetName()
+		if o.AddDateToName {
+			takenTime, err := img.GetDateTime()
+			if err != nil {
+				errs[path] = err
+				continue
+			}
+			imageName = fmt.Sprintf("%s_%s", takenTime.Format("20060102"), imageName)
+		}
+
+		dst = filepath.Join(dst, imageName)
 		if o.Copy {
 			err = img.Copy(dst)
 			if err != nil {
-				return err
+				errs[path] = err
+				continue
 			}
 		} else {
 			err = img.Move(dst)
 			if err != nil {
-				return err
+				errs[path] = err
+				continue
 			}
 		}
-
-		bar.Add(1)
 	}
+
+	if len(errs) > 0 {
+		fmt.Printf("%d errors occured when importing images\n", len(errs))
+		for k, v := range errs {
+			fmt.Printf("%s:\n%v\n", k, v)
+		}
+	}
+
 	return nil
 }
 
@@ -121,7 +161,7 @@ func validateArgs(args []string) (string, string, error) {
 		}
 	}
 
-	isEmpty, err := files.IsEmpty(args[1])
+	isEmpty, err := files.IsEmpty(args[0])
 	if err != nil {
 		return "", "", err
 	}
@@ -130,6 +170,17 @@ func validateArgs(args []string) (string, string, error) {
 	}
 
 	return args[0], args[1], nil
+}
+
+func (o *PhotoOptions) filterPaths(paths []string) []string {
+	var filteredPaths []string
+	for _, path := range paths {
+		if o.Exclude != nil && o.isExtensionExcluded(files.GetExtension(path)) {
+			continue
+		}
+		filteredPaths = append(filteredPaths, path)
+	}
+	return filteredPaths
 }
 
 func (o *PhotoOptions) isExtensionExcluded(imgExt string) bool {

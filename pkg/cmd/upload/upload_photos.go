@@ -109,7 +109,7 @@ func (o *PhotoOptions) Run(args []string) error {
 
 		if o.AlbumName != "" {
 			if photoSetID == "" {
-				photoSetID, err = flickrUtils.CreatePhotoSet(o.client, "test", "", photoID)
+				photoSetID, err = flickrUtils.CreatePhotoSet(o.client, o.AlbumName, "", photoID)
 				if err != nil {
 					return err
 				}
